@@ -260,6 +260,7 @@ abstract class CMB_Field {
 			return;
 
 		$this->values = $values;
+
 		$this->parse_save_values();
 
 		// Allow override from args
@@ -1478,10 +1479,11 @@ class CMB_Group_Field extends CMB_Field {
 
 				$field_value = $field->get_values();
 
-				// if the field is a repeatable field, store the whole array of them, if it's not repeatble,
-				// just store the first (and only) one directly
-				if ( ! $field->args['repeatable'] )
-					$field_value = reset( $field_value );
+				// if the field is a repeatable field, trim array to length 1.
+				if ( ! $field->args['repeatable'] ) {
+					$field_value = array_slice( $field_value, 0, 1 );
+				}
+
 			}
 		}
 
