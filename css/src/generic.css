@@ -50,3 +50,7 @@
 	        transition: none;
 	top: 3px;
 }
+
+.cmb_metabox [disabled] {
+	background: #F7F7F7;
+}
