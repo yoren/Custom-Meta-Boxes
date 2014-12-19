@@ -112,7 +112,7 @@ abstract class CMB_Field {
 		$id = $this->id;
 
 		if ( isset( $this->parent ) ) {
-			$parent_id = preg_replace( '/cmb\-field\-(\d.|x)+/', 'cmb-group-$1', $this->parent->get_the_id_attr() );
+			$parent_id = preg_replace( '/cmb\-field\-(\d+|x)/', 'cmb-group-$1', $this->parent->get_the_id_attr() );
 			$id = $parent_id . '[' . $id . ']';
 		}
 
@@ -153,7 +153,7 @@ abstract class CMB_Field {
 		$name = str_replace( '[]', '', $this->name );
 
 		if ( isset( $this->parent ) ) {
-			$parent_name = preg_replace( '/cmb\-field\-(\d.|x)+/', 'cmb-group-$1', $this->parent->get_the_name_attr() );
+			$parent_name = preg_replace( '/cmb\-field\-(\d+|x)/', 'cmb-group-$1', $this->parent->get_the_name_attr() );
 			$name = $parent_name . '[' . $name . ']';
 		}
 
@@ -448,7 +448,11 @@ class CMB_File_Field extends CMB_Field {
 				<?php esc_html_e( 'Remove', 'cmb' ); ?>
 			</button>
 
-			<input type="hidden" class="cmb-file-upload-input" <?php $this->name_attr(); ?> value="<?php echo esc_attr( $this->value ); ?>" />
+			<input type="hidden"
+				<?php $this->class_attr( 'cmb-file-upload-input' ); ?>
+				<?php $this->name_attr(); ?>
+				value="<?php echo esc_attr( $this->value ); ?>"
+			/>
 
 		</div>
 
@@ -508,7 +512,11 @@ class CMB_Image_Field extends CMB_File_Field {
 				<?php esc_html_e( 'Remove', 'cmb' ); ?>
 			</button>
 
-			<input type="hidden" class="cmb-file-upload-input" <?php $this->name_attr(); ?> value="<?php echo esc_attr( $this->value ); ?>" />
+			<input type="hidden"
+				<?php $this->class_attr( 'cmb-file-upload-input' ); ?>
+				<?php $this->name_attr(); ?>
+				value="<?php echo esc_attr( $this->value ); ?>"
+			/>
 
 		</div>
 
@@ -678,8 +686,7 @@ class CMB_Datetime_Timestamp_Field extends CMB_Field {
 	public function enqueue_scripts() {
 
 		parent::enqueue_scripts();
-
-		wp_enqueue_style( 'cmb-jquery-ui', trailingslashit( CMB_URL ) . 'css/jquery-ui.css', '1.10.3' );
+		wp_enqueue_style( 'cmb-jquery-ui', trailingslashit( CMB_URL ) . 'css/vendor/jquery-ui/jquery-ui.css', '1.10.3' );
 
 		wp_enqueue_script( 'cmb-timepicker', trailingslashit( CMB_URL ) . 'js/jquery.timePicker.min.js', array( 'jquery', 'cmb-scripts' ) );
 		wp_enqueue_script( 'cmb-datetime', trailingslashit( CMB_URL ) . 'js/field.datetime.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-datepicker', 'cmb-scripts' ) );
@@ -822,7 +829,7 @@ class CMB_Title extends CMB_Field {
 		?>
 
 		<div class="field-title">
-			<h2>
+			<h2 <?php $this->class_attr(); ?>>
 				<?php echo esc_html( $this->title ); ?>
 			</h2>
 		</div>
@@ -945,7 +952,7 @@ class CMB_Select extends CMB_Field {
 
 		parent::enqueue_scripts();
 
-		wp_enqueue_script( 'select2', trailingslashit( CMB_URL ) . 'js/select2/select2.js', array( 'jquery' ) );
+		wp_enqueue_script( 'select2', trailingslashit( CMB_URL ) . 'js/vendor/select2/select2.js', array( 'jquery' ) );
 		wp_enqueue_script( 'field-select', trailingslashit( CMB_URL ) . 'js/field.select.js', array( 'jquery', 'select2', 'cmb-scripts' ) );
 	}
 
@@ -953,7 +960,7 @@ class CMB_Select extends CMB_Field {
 
 		parent::enqueue_styles();
 
-		wp_enqueue_style( 'select2', trailingslashit( CMB_URL ) . 'js/select2/select2.css' );
+		wp_enqueue_style( 'select2', trailingslashit( CMB_URL ) . 'js/vendor/select2/select2.css' );
 	}
 
 	public function html() {
@@ -982,7 +989,7 @@ class CMB_Select extends CMB_Field {
 			<?php printf( 'name="%s"', esc_attr( $name ) ); ?>
 			<?php printf( 'data-field-id="%s" ', esc_attr( $this->get_js_id() ) ); ?>
 			<?php echo ! empty( $this->args['multiple'] ) ? 'multiple' : '' ?>
-			class="cmb_select"
+			<?php $this->class_attr( 'cmb_select' ); ?>
 			style="width: 100%"
 		>
 
@@ -1041,6 +1048,10 @@ class CMB_Taxonomy extends CMB_Select {
 	public function get_delegate_data() {
 
 		$terms = $this->get_terms();
+
+		if ( is_wp_error( $terms ) ) {
+			return array();
+		}
 
 		$term_options = array();
 
@@ -1181,12 +1192,11 @@ class CMB_Post_Select extends CMB_Select {
 						<?php if ( $this->args['multiple'] ) : ?>
 
 							<?php foreach ( (array) $this->value as $post_id ) : ?>
-								data.push( <?php echo sprintf( '{ id: %d, text: "%s" }', $post_id, get_the_title( $post_id ) ); ?> );
+								data.push( <?php echo json_encode( array( 'id' => $post_id, 'text' => html_entity_decode( get_the_title( $post_id ) ) ) ); ?> );
 							<?php endforeach; ?>
 
 						<?php else : ?>
-
-							data = <?php echo sprintf( '{ id: %d, text: "%s" }', $this->value, get_the_title( $this->value ) ); ?>;
+							data = <?php echo json_encode( array( 'id' => $this->value, 'text' => html_entity_decode( get_the_title( $this->get_value() ) ) ) ); ?>;
 
 						<?php endif; ?>
 
@@ -1250,8 +1260,9 @@ function cmb_ajax_post_select() {
 
 	$json = array( 'total' => $query->found_posts, 'posts' => array() );
 
-	foreach ( $query->posts as $post_id )
-		array_push( $json['posts'], array( 'id' => $post_id, 'text' => get_the_title( $post_id ) ) );
+	foreach ( $query->posts as $post_id ) {
+		array_push( $json['posts'], array( 'id' => $post_id, 'text' => html_entity_decode( get_the_title( $post_id ) ) ) );
+	}
 
 	echo json_encode( $json );
 

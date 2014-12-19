@@ -1,49 +1,35 @@
 <?php
 /*
-Script Name: 	Custom Metaboxes and Fields
-Contributors: 	Andrew Norcross ( @norcross / andrewnorcross.com )
-				Jared Atchison ( @jaredatch / jaredatchison.com )
-				Bill Erickson ( @billerickson / billerickson.net )
-				Human Made Limited ( @humanmadeltd / hmn.md )
-				Jonathan Bardo ( @jonathanbardo / jonathanbardo.com )
-Description: 	This will create metaboxes with custom fields that will blow your mind.
-Version: 	1.0 - Beta 1
+Plugin Name: Custom Meta Boxes
+Plugin URI: https://github.com/humanmade/Custom-Meta-Boxes
+Description: Lets you easily create metaboxes with custom fields that will blow your mind. Originally a fork of https://github.com/jaredatch/Custom-Metaboxes-and-Fields-for-WordPress.
+Version: 1.0.1
+License: GPL-2.0+
+Author: Human Made Limited
+Author URI: http://hmn.md
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License, version 2, as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-
-/**
- * Released under the GPL license
- * http://www.opensource.org/licenses/gpl-license.php
- *
- * This is an add-on for WordPress
- * http://wordpress.org/
- *
- * **********************************************************************
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * **********************************************************************
- */
-
-/**
- * Defines the url to which is used to load local resources.
- * This may need to be filtered for local Window installations.
- * If resources do not load, please check the wiki for details.
- */
 
 if ( ! defined( 'CMB_DEV') )
 	define( 'CMB_DEV', false );
 
 if ( ! defined( 'CMB_PATH') )
-	define( 'CMB_PATH', str_replace( '\\', '/', dirname( __FILE__ ) ) );
+	define( 'CMB_PATH', plugin_dir_path( __FILE__ ) );
 
 if ( ! defined( 'CMB_URL' ) )
-	define( 'CMB_URL', str_replace( str_replace( '\\', '/', WP_CONTENT_DIR ), str_replace( '\\', '/', WP_CONTENT_URL ), CMB_PATH ) );
+	define( 'CMB_URL', plugins_url( '', __FILE__ ) );
 
 include_once( CMB_PATH . '/classes.fields.php' );
 include_once( CMB_PATH . '/class.cmb-meta-box.php' );
@@ -55,7 +41,7 @@ include_once( CMB_PATH . '/fields-anywhere.php' );
 
 /**
  * Get all the meta boxes on init
- * 
+ *
  * @return null
  */
 function cmb_init() {
@@ -85,7 +71,7 @@ add_action( 'init', 'cmb_init' );
  *
  * Key is field name, Value is class used by field.
  * Available fields can be modified using the 'cmb_field_types' filter.
- * 
+ *
  * @return array
  */
 function _cmb_available_fields() {
@@ -118,8 +104,8 @@ function _cmb_available_fields() {
 
 /**
  * Get a field class by type
- * 
- * @param  string $type 
+ *
+ * @param  string $type
  * @return string $class, or false if not found.
  */
 function _cmb_field_class_for_type( $type ) {
@@ -134,24 +120,24 @@ function _cmb_field_class_for_type( $type ) {
 }
 
 /**
- * For the order of repeatable fields to be guaranteed, orderby meta_id needs to be set. 
+ * For the order of repeatable fields to be guaranteed, orderby meta_id needs to be set.
  * Note usermeta has a different meta_id column name.
- * 
+ *
  * Only do this for older versions as meta is now ordered by ID (since 3.8)
  * See http://core.trac.wordpress.org/ticket/25511
- * 
+ *
  * @param  string $query
  * @return string $query
  */
 function cmb_fix_meta_query_order($query) {
 
     $pattern = '/^SELECT (post_id|user_id), meta_key, meta_value FROM \w* WHERE post_id IN \([\d|,]*\)$/';
-    
-    if ( 
-            0 === strpos( $query, "SELECT post_id, meta_key, meta_value" ) &&  
-            preg_match( $pattern, $query, $matches ) 
-    ) {        
-            
+
+    if (
+            0 === strpos( $query, "SELECT post_id, meta_key, meta_value" ) &&
+            preg_match( $pattern, $query, $matches )
+    ) {
+
             if ( isset( $matches[1] ) && 'user_id' == $matches[1] )
                     $meta_id_column = 'umeta_id';
             else
@@ -161,12 +147,12 @@ function cmb_fix_meta_query_order($query) {
 
             if ( false === strpos( $query, $meta_query_orderby ) )
                     $query .= $meta_query_orderby;
-    
+
     }
-    
+
     return $query;
 
 }
 
 if ( version_compare( get_bloginfo( 'version' ), '3.8', '<' ) )
-	add_filter( 'query', 'cmb_fix_meta_query_order', 1 ); 
+	add_filter( 'query', 'cmb_fix_meta_query_order', 1 );
